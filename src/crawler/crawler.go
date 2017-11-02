@@ -9,27 +9,26 @@ import (
 // A Daily represents the daily trading data of a Security.
 type Daily struct {
 	Date   time.Time
-	Open   float32
-	Close  float32
-	High   float32
-	Low    float32
+	Open   float64
+	Close  float64
+	High   float64
+	Low    float64
 	Volume int
-	Avg    float32
+	Avg    float64
 }
 
 // A Security is a financial instrument in a market.
 type Security interface {
 	Symbol() string
 	Name() string
-	Date(year, month, date int) (Daily, bool)
-	Month(year, month int) []Daily
-	Year(int) []Daily
+	Date(year, month, date int) (Daily, error)
+	Month(year, month int) ([]Daily, error)
+	Year(int) ([]Daily, error)
 }
 
 // A Market represents an exchange where financial instruments are traded.
 type Market interface {
-	Name() string
-	Search(string) (Security, bool)
+	Search(string) (Security, error)
 }
 
 var (
