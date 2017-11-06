@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -35,8 +36,47 @@ func (s *Stock) Month(year, month int) ([]crawler.Daily, error) {
 }
 
 func (s *Stock) Year(year int) ([]crawler.Daily, error) {
-	// TODO
-	return nil, nil
+	m := 12
+	t := time.Now()
+	if year == t.Year() {
+		m = int(t.Month())
+	}
+
+	errs := make(chan error)
+	done := make(chan bool)
+	defer close(errs)
+	defer close(done)
+
+	wg := sync.WaitGroup{}
+	yr := make([][]crawler.Daily, m)
+	for i := 0; i < m; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var err error
+			yr[i], err = query(s.code, year, i+1)
+			if err != nil {
+				ch <- err
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		done <- true
+	}()
+	for {
+		select {
+		case e := <-errs:
+			return nil, e
+		case <-done:
+			for i := 1; i < m; i++ {
+				yr[0] = append(yr[0], yr[i]...)
+			}
+			return yr[0], nil
+		default:
+		}
+	}
 }
 
 // Exchange implements crawler.Market interface
