@@ -3,7 +3,6 @@ package twse
 import (
 	"crawler"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -29,10 +28,10 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 
 	// check values
 	if month < 1 || month > 12 {
-		return nil, errors.New(fmt.Sprintf("twse: Invalid month %d", month))
+		return nil, fmt.Errorf("twse: Invalid month %d", month)
 	}
 	if year < 1992 || year > time.Now().Year() {
-		return nil, errors.New(fmt.Sprintf("twse: Invalid year %d", year))
+		return nil, fmt.Errorf("twse: Invalid year %d", year)
 	}
 
 	// the first date available is 1992/01/04
@@ -54,7 +53,7 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 	}
 
 	if st.Stat != "OK" {
-		return nil, errors.New("twse: " + st.Stat)
+		return nil, fmt.Errorf("twse: %s", st.Stat)
 	}
 
 	ds := []crawler.Daily{}
@@ -65,7 +64,14 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 		h, _ := strconv.ParseFloat(st.Data[i][4], 64)
 		l, _ := strconv.ParseFloat(st.Data[i][5], 64)
 		c, _ := strconv.ParseFloat(st.Data[i][6], 64)
-		ds = append(ds, crawler.Daily{t, o, c, h, l, v, -1}) // Avg not support yet
+		ds = append(ds, crawler.Daily{
+			Date:   t,
+			Open:   o,
+			Close:  c,
+			High:   h,
+			Low:    l,
+			Volume: v,
+			Avg:    -1}) // Avg not support yet
 	}
 	return ds, nil
 }

@@ -3,13 +3,12 @@ package twse
 import (
 	"crawler"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-// Stock implements crawler.Security interface
+// A Stock is an instance which implements crawler.Security interface.
 type Stock struct {
 	code string
 	name string
@@ -25,11 +24,24 @@ func (s *Stock) Name() string {
 	return s.name
 }
 
-func (s *Stock) Date(year, month, date int) (crawler.Daily, error) {
-	// TODO
-	return crawler.Daily{}, nil
+// Date returns a crawler.Daily by given date.
+func (s *Stock) Date(year, month, day int) (crawler.Daily, error) {
+	m, err := query(s.code, year, month)
+	if err != nil {
+		return crawler.Daily{}, err
+	}
+
+	for d := range m {
+		if m[d].Date.Day() == day {
+			return m[d], nil
+		}
+	}
+
+	err = fmt.Errorf("twse: Given date %4d%02d%02d not fouend, is the market closed?", year, month, day)
+	return crawler.Daily{}, err
 }
 
+// Month returns a list of crawler.Daily by given year and month.
 func (s *Stock) Month(year, month int) ([]crawler.Daily, error) {
 	return query(s.code, year, month)
 }
@@ -39,9 +51,10 @@ func (s *Stock) Year(year int) ([]crawler.Daily, error) {
 	return nil, nil
 }
 
-// Exchange implements crawler.Market interface
+// An Exchange is an instance which implements crawler.Market interface.
 type Exchange struct{}
 
+// Search returns a crawler.Security by given code.
 func (e *Exchange) Search(code string) (crawler.Security, error) {
 	t := time.Now()
 	res, err := http.Get(fmt.Sprintf(urlStock, t.Year(), t.Month(), t.Day(), code))
@@ -57,7 +70,7 @@ func (e *Exchange) Search(code string) (crawler.Security, error) {
 	}
 
 	if st.Stat != "OK" {
-		return nil, errors.New("twse: ISIN " + code + " not found")
+		return nil, fmt.Errorf("twse: ISIN %s not found", code)
 	}
 
 	return &Stock{
