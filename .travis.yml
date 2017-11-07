@@ -5,6 +5,6 @@ go:
   - 1.8
   - 1.9.X
 
-go_import_path: github.com/Hunsin/Compass
+install: export GOPATH=$TRAVIS_BUILD_DIR
 
 script: go test twse
