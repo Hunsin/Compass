@@ -13,15 +13,28 @@ import (
 const (
 	urlStock   = "http://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=json&date=%4d%02d%02d&stockNo=%s"
 	dateFormat = "2006/01/02 15:04"
+	limit      = 8 // limitation of parallel request
 )
 
-var cst *time.Location
+var (
+	cst    *time.Location
+	permit = make(chan bool, limit)
+)
 
 type apiStock struct {
 	Data   [][]string `json:"data"`
 	Date   string     `json:"date"`
 	Fields []string   `json:"fields"`
 	Stat   string     `json:"stat"`
+}
+
+func httpGet(url string) (*http.Response, error) {
+	<-permit
+	defer func() {
+		time.Sleep(20 * time.Millisecond) // release after 0.02s
+		permit <- true
+	}()
+	return http.Get(url)
 }
 
 func query(code string, year, month int) ([]crawler.Daily, error) {
@@ -40,7 +53,7 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 		day = 4
 	}
 
-	res, err := http.Get(fmt.Sprintf(urlStock, year, month, day, code))
+	res, err := httpGet(fmt.Sprintf(urlStock, year, month, day, code))
 	if err != nil {
 		return nil, err
 	}
@@ -82,5 +95,9 @@ func init() {
 	cst, err = time.LoadLocation("Asia/Taipei")
 	if err != nil {
 		cst = time.FixedZone("Asia/Taipei", 8)
+	}
+
+	for i := 0; i < limit; i++ {
+		permit <- true
 	}
 }

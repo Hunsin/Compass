@@ -4,7 +4,6 @@ import (
 	"crawler"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"sync"
 	"time"
 )
@@ -99,7 +98,7 @@ type Exchange struct{}
 // Search returns a crawler.Security by given code.
 func (e *Exchange) Search(code string) (crawler.Security, error) {
 	t := time.Now()
-	res, err := http.Get(fmt.Sprintf(urlStock, t.Year(), t.Month(), t.Day(), code))
+	res, err := httpGet(fmt.Sprintf(urlStock, t.Year(), t.Month(), t.Day(), code))
 	if err != nil {
 		return nil, err
 	}
