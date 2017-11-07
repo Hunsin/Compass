@@ -54,42 +54,36 @@ func (s *Stock) Year(year int) ([]crawler.Daily, error) {
 		m = int(t.Month())
 	}
 
-	errs := make(chan error)
-	done := make(chan bool)
-	defer close(errs)
-	defer close(done)
+	ch := make(chan error)
+	defer close(ch)
 
 	wg := sync.WaitGroup{}
-	yr := make([][]crawler.Daily, m)
+	yr := make(map[int][]crawler.Daily)
 	for i := 0; i < m; i++ {
 		wg.Add(1)
-		go func() {
+		go func(j int) {
 			defer wg.Done()
 			var err error
-			yr[i], err = query(s.code, year, i+1)
+			yr[j], err = query(s.code, year, j+1)
 			if err != nil {
-				errs <- err
+				ch <- err
 			}
-		}()
+		}(i)
 	}
 
 	go func() {
 		wg.Wait()
-		done <- true
+		ch <- nil
 	}()
-	for {
-		select {
-		case e := <-errs:
-			return nil, e
-		case <-done:
-			for i := 1; i < m; i++ {
-				yr[0] = append(yr[0], yr[i]...)
-			}
-			return yr[0], nil
-		default:
-			// do nothing
-		}
+
+	if err := <-ch; err != nil {
+		return nil, err
 	}
+
+	for i := 1; i < m; i++ {
+		yr[0] = append(yr[0], yr[i]...)
+	}
+	return yr[0], nil
 }
 
 // An Exchange is an instance which implements crawler.Market interface.

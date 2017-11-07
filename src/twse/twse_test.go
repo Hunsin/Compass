@@ -46,7 +46,7 @@ func TestSearchAndSymbol(t *testing.T) {
 			if !samples[w] {
 				continue
 			}
-			t.Errorf("Search %s exits with error: %v", w, err)
+			t.Fatalf("Search %s exits with error: %v", w, err)
 		}
 
 		if !samples[w] {
@@ -98,5 +98,17 @@ func TestMonth(t *testing.T) {
 	// There were 19 days opened in Oct. 2017
 	if len(got) != 19 {
 		t.Errorf("Stock.Month doesn't return complete data\nNum. of Daily: %d", len(got))
+	}
+}
+
+func TestYear(t *testing.T) {
+	got, err := tsmc.Year(2016)
+	if err != nil {
+		t.Errorf("Stock.Year exists with error: %v", err)
+	}
+
+	// There were 244 days opened in 2016
+	if len(got) != 244 {
+		t.Errorf("Stock.Year doesn't return complete data\nNum. of Daily: %d", len(got))
 	}
 }
