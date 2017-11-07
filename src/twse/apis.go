@@ -12,7 +12,7 @@ import (
 
 const (
 	urlStock   = "http://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=json&date=%4d%02d%02d&stockNo=%s"
-	dateFormat = "2006/01/02"
+	dateFormat = "2006/01/02 15:04"
 )
 
 var cst *time.Location
@@ -58,7 +58,8 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 
 	ds := []crawler.Daily{}
 	for i := range st.Data {
-		t, _ := time.ParseInLocation(dateFormat, st.Data[i][0], cst)
+		// default closed time 14:30
+		t, _ := time.ParseInLocation(dateFormat, st.Data[i][0]+" 14:30", cst)
 		v, _ := strconv.Atoi(strings.Replace(st.Data[i][1], ",", "", -1))
 		o, _ := strconv.ParseFloat(st.Data[i][3], 64)
 		h, _ := strconv.ParseFloat(st.Data[i][4], 64)
@@ -67,9 +68,9 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 		ds = append(ds, crawler.Daily{
 			Date:   t,
 			Open:   o,
-			Close:  c,
 			High:   h,
 			Low:    l,
+			Close:  c,
 			Volume: v,
 			Avg:    -1}) // Avg not support yet
 	}

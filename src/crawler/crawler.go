@@ -10,9 +10,9 @@ import (
 type Daily struct {
 	Date   time.Time
 	Open   float64
-	Close  float64
 	High   float64
 	Low    float64
+	Close  float64
 	Volume int
 	Avg    float64
 }
@@ -33,7 +33,7 @@ type Market interface {
 
 var (
 	mksMu sync.Mutex
-	mks   map[string]Market
+	mks   = make(map[string]Market)
 )
 
 // Register makes the named Market available for querying data.

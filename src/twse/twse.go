@@ -47,6 +47,7 @@ func (s *Stock) Month(year, month int) ([]crawler.Daily, error) {
 	return query(s.code, year, month)
 }
 
+// Year returns a list of crawler.Daily in given year.
 func (s *Stock) Year(year int) ([]crawler.Daily, error) {
 	m := 12
 	t := time.Now()
@@ -68,7 +69,7 @@ func (s *Stock) Year(year int) ([]crawler.Daily, error) {
 			var err error
 			yr[i], err = query(s.code, year, i+1)
 			if err != nil {
-				ch <- err
+				errs <- err
 			}
 		}()
 	}
@@ -87,6 +88,7 @@ func (s *Stock) Year(year int) ([]crawler.Daily, error) {
 			}
 			return yr[0], nil
 		default:
+			// do nothing
 		}
 	}
 }
