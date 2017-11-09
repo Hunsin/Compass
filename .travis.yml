@@ -2,8 +2,10 @@ language: go
   
 go:
   - 1.8
-  - 1.9.X
+  - 1.9
+
+sudo: required
 
 install: export GOPATH=$TRAVIS_BUILD_DIR
 
-script: go test twse
+script: go test -v twse
