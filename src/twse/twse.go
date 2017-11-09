@@ -2,7 +2,6 @@ package twse
 
 import (
 	"crawler"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -92,14 +91,9 @@ type Exchange struct{}
 // Search returns a crawler.Security by given code.
 func (e *Exchange) Search(code string) (crawler.Security, error) {
 	t := time.Now()
-	res, err := httpGet(fmt.Sprintf(urlStock, t.Year(), t.Month(), t.Day(), code))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
 
 	st := apiStock{}
-	err = json.NewDecoder(res.Body).Decode(&st)
+	err := parseAgent(fmt.Sprintf(urlStock, t.Year(), t.Month(), t.Day(), code), &st)
 	if err != nil {
 		return nil, err
 	}

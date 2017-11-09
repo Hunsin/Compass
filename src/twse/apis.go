@@ -17,6 +17,7 @@ const (
 
 var (
 	cst    *time.Location
+	client = &http.Client{Timeout: time.Duration(8 * time.Second)}
 	permit = make(chan bool)
 )
 
@@ -27,13 +28,36 @@ type apiStock struct {
 	Stat   string     `json:"stat"`
 }
 
-func httpGet(url string) (*http.Response, error) {
+// parseAPI decodes the JSON-encoded data from given url and stores it into v
+func parseAPI(url string, v interface{}) error {
+	res, err := client.Get(url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	return json.NewDecoder(res.Body).Decode(v)
+}
+
+// parseAgent calls parseAPI once permit is available and returns permit after
+// it's finished. If an error occurred when calling parseAPI, it tries again
+// after few seconds.
+func parseAgent(url string, v interface{}) error {
 	<-permit
 	defer func() {
 		time.Sleep(80 * time.Millisecond) // release after 0.08s
 		go func() { permit <- true }()
 	}()
-	return http.Get(url)
+
+	err := parseAPI(url, v)
+	if err != nil {
+
+		// extensive requests may cause the client being block by TWSE
+		// wait for 16 seconds and try again
+		time.Sleep(16 * time.Second)
+		return parseAPI(url, v)
+	}
+
+	return nil
 }
 
 func query(code string, year, month int) ([]crawler.Daily, error) {
@@ -52,14 +76,8 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 		day = 4
 	}
 
-	res, err := httpGet(fmt.Sprintf(urlStock, year, month, day, code))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
 	st := apiStock{}
-	err = json.NewDecoder(res.Body).Decode(&st)
+	err := parseAgent(fmt.Sprintf(urlStock, year, month, day, code), &st)
 	if err != nil {
 		return nil, err
 	}
