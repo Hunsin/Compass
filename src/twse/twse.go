@@ -90,22 +90,7 @@ type Exchange struct{}
 
 // Search returns a crawler.Security by given code.
 func (e *Exchange) Search(code string) (crawler.Security, error) {
-	t := time.Now()
-
-	st := apiStock{}
-	err := parseAgent(fmt.Sprintf(urlStock, t.Year(), t.Month(), t.Day(), code), &st)
-	if err != nil {
-		return nil, err
-	}
-
-	if st.Stat != "OK" {
-		return nil, fmt.Errorf("twse: ISIN %s not found", code)
-	}
-
-	return &Stock{
-		code: code,
-		name: "", // name not support yet
-	}, nil
+	return parseISIN(code)
 }
 
 func init() {

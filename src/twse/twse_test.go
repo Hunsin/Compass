@@ -60,6 +60,25 @@ func TestSearchAndSymbol(t *testing.T) {
 	}
 }
 
+func TestName(t *testing.T) {
+	samples := map[string]string{
+		"2330":   "TSMC",    // Stock
+		"03003X": "YX 03",   // Listing Warrants
+		"9103":   "MEDTECS", // TDR
+	}
+
+	for k := range samples {
+		st, err := tw.Search(k)
+		if err != nil {
+			t.Fatalf("Search %s exits with error: %v", k, err)
+		}
+
+		if got := st.Name(); got != samples[k] {
+			t.Errorf("Name() not match, want: %s, got: %s", samples[k], got)
+		}
+	}
+}
+
 func TestDate(t *testing.T) {
 	dt, _ := time.ParseInLocation(dateFormat, "2017/11/06 14:30", cst)
 

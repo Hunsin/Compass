@@ -6,7 +6,7 @@ import (
 )
 
 func TestConv(t *testing.T) {
-	out, err := conv(urlTable)
+	out, err := conv(urlISIN)
 	if err != nil {
 		t.Fatalf("conv exits with error: %v", err)
 	}
