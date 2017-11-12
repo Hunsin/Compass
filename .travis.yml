@@ -6,6 +6,10 @@ go:
 
 sudo: required
 
-install: export GOPATH=$TRAVIS_BUILD_DIR
+before_install: export GOPATH=$TRAVIS_BUILD_DIR
+
+install:
+  - go get golang.org/x/text/transform
+  - go get golang.org/x/text/encoding/traditionalchinese
 
 script: go test -v twse

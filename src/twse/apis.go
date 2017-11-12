@@ -91,10 +91,11 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 		// default closed time 14:30
 		t, _ := time.ParseInLocation(dateFormat, st.Data[i][0]+" 14:30", cst)
 		v, _ := strconv.Atoi(strings.Replace(st.Data[i][1], ",", "", -1))
-		o, _ := strconv.ParseFloat(st.Data[i][3], 64)
-		h, _ := strconv.ParseFloat(st.Data[i][4], 64)
-		l, _ := strconv.ParseFloat(st.Data[i][5], 64)
-		c, _ := strconv.ParseFloat(st.Data[i][6], 64)
+		s, _ := strconv.Atoi(strings.Replace(st.Data[i][2], ",", "", -1))
+		o, _ := strconv.ParseFloat(strings.Replace(st.Data[i][3], ",", "", -1), 64)
+		h, _ := strconv.ParseFloat(strings.Replace(st.Data[i][4], ",", "", -1), 64)
+		l, _ := strconv.ParseFloat(strings.Replace(st.Data[i][5], ",", "", -1), 64)
+		c, _ := strconv.ParseFloat(strings.Replace(st.Data[i][6], ",", "", -1), 64)
 		ds = append(ds, crawler.Daily{
 			Date:   t,
 			Open:   o,
@@ -102,7 +103,7 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 			Low:    l,
 			Close:  c,
 			Volume: v,
-			Avg:    -1}) // Avg not support yet
+			Avg:    float64(s) / float64(v)})
 	}
 	return ds, nil
 }

@@ -2,6 +2,7 @@ package twse
 
 import (
 	"crawler"
+	"math"
 	"testing"
 	"time"
 )
@@ -23,7 +24,7 @@ func compare(want, got crawler.Daily) bool {
 		want.Low == got.Low &&
 		want.Close == got.Close &&
 		want.Volume == got.Volume &&
-		want.Avg == got.Avg)
+		math.Abs(want.Avg-got.Avg) > 0.00001)
 }
 
 func TestOpen(t *testing.T) {
@@ -60,32 +61,50 @@ func TestSearchAndSymbol(t *testing.T) {
 }
 
 func TestDate(t *testing.T) {
-
-	// 2017/11/06 data of TSMC(2330)
 	dt, _ := time.ParseInLocation(dateFormat, "2017/11/06 14:30", cst)
-	want := crawler.Daily{
-		Date:   dt,
-		Open:   243.5,
-		High:   244,
-		Low:    239,
-		Close:  239.5,
-		Volume: 21029515,
-		Avg:    -1, // Avg not support yet
+
+	// 2017/11/06 data of TSMC(2330) and LARGAN(3008)
+	samples := map[string]crawler.Daily{
+		"2330": crawler.Daily{
+			Date:   dt,
+			Open:   243.5,
+			High:   244,
+			Low:    239,
+			Close:  239.5,
+			Volume: 21029515,
+			Avg:    240.78876284117823,
+		},
+		"3008": crawler.Daily{
+			Date:   dt,
+			Open:   5950,
+			High:   5950,
+			Low:    5825,
+			Close:  5875,
+			Volume: 463126,
+			Avg:    5889.290171573179,
+		},
 	}
 
-	// This date is closed
-	got, err := tsmc.Date(2017, 11, 4)
-	if err == nil {
-		t.Error("Stock.Date doesn't return error in closed date 2017/11/4")
-	}
+	for k := range samples {
+		st, err := tw.Search(k)
+		if err != nil {
+			t.Fatalf("Search %s exits with error: %v", k, err)
+		}
 
-	got, err = tsmc.Date(2017, 11, 6)
-	if err != nil {
-		t.Errorf("Stock.Date exists with error: %v", err)
-	}
+		// This date is closed
+		got, err := st.Date(2017, 11, 4)
+		if err == nil {
+			t.Error("Stock.Date doesn't return error in closed date 2017/11/4")
+		}
 
-	if !compare(want, got) {
-		t.Errorf("Stock.Date failed\nGot : %v\nWant: %v", got, want)
+		got, err = st.Date(2017, 11, 6)
+		if err != nil {
+			t.Errorf("Stock.Date exists with error: %v", err)
+		}
+
+		if !compare(samples[k], got) {
+			t.Errorf("Stock.Date failed\nGot : %v\nWant: %v", got, samples[k])
+		}
 	}
 }
 
