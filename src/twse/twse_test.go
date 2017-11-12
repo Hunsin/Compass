@@ -24,7 +24,7 @@ func compare(want, got crawler.Daily) bool {
 		want.Low == got.Low &&
 		want.Close == got.Close &&
 		want.Volume == got.Volume &&
-		math.Abs(want.Avg-got.Avg) > 0.00001)
+		math.Abs(want.Avg-got.Avg) < 0.00001)
 }
 
 func TestOpen(t *testing.T) {
