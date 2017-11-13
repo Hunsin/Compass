@@ -133,7 +133,14 @@ func TestDate(t *testing.T) {
 }
 
 func TestMonth(t *testing.T) {
-	got, err := tsmc.Month(2017, 10)
+
+	// Not listed
+	got, err := tsmc.Month(1994, 8)
+	if _, ok := err.(*crawler.ErrNotListed); !ok {
+		t.Errorf("Stock.Month doesn't return error with the month not listed")
+	}
+
+	got, err = tsmc.Month(2017, 10)
 	if err != nil {
 		t.Errorf("Stock.Month exists with error: %v", err)
 	}
@@ -145,13 +152,19 @@ func TestMonth(t *testing.T) {
 }
 
 func TestYear(t *testing.T) {
-	got, err := tsmc.Year(2016)
-	if err != nil {
-		t.Errorf("Stock.Year exists with error: %v", err)
+	samples := map[int]int{
+		1994: 93,  // There were  93 days opened in 1994
+		2016: 244, // There were 244 days opened in 2016
 	}
 
-	// There were 244 days opened in 2016
-	if len(got) != 244 {
-		t.Errorf("Stock.Year doesn't return complete data\nNum. of Daily: %d", len(got))
+	for y := range samples {
+		got, err := tsmc.Year(y)
+		if err != nil {
+			t.Errorf("Stock.Year exists with error: %v", err)
+		}
+
+		if len(got) != samples[y] {
+			t.Errorf("Stock.Year doesn't return complete data\nNum. of Daily: %d, Want: %d", len(got), samples[y])
+		}
 	}
 }

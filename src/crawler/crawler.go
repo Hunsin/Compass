@@ -32,6 +32,16 @@ type Market interface {
 	Search(string) (Security, error)
 }
 
+// An ErrNotListed represents an error when trying to get trading data of
+// a Security at the date before it is listed.
+type ErrNotListed struct {
+	Err string
+}
+
+func (nl *ErrNotListed) Error() string {
+	return nl.Err
+}
+
 var (
 	mksMu sync.Mutex
 	mks   = make(map[string]Market)

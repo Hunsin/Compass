@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var noListed = &crawler.ErrNotListed{Err: "twse: Security not listed"}
+
 // A Security is an instance which implements crawler.Security interface.
 type Security struct {
 	code string
@@ -49,12 +51,12 @@ func (s *Security) Date(year, month, day int) (crawler.Daily, error) {
 // Month returns a list of crawler.Daily by given year and month.
 func (s *Security) Month(year, month int) ([]crawler.Daily, error) {
 
-	// return nil if s hasn't listed at the time
+	// return error if s hasn't listed at the time
 	if year < s.date.Year() {
-		return []crawler.Daily{}, nil
+		return nil, noListed
 	}
 	if year == s.date.Year() && month < int(s.date.Month()) {
-		return []crawler.Daily{}, nil
+		return nil, noListed
 	}
 
 	return query(s.code, year, month)
@@ -62,10 +64,19 @@ func (s *Security) Month(year, month int) ([]crawler.Daily, error) {
 
 // Year returns a list of crawler.Daily in given year.
 func (s *Security) Year(year int) ([]crawler.Daily, error) {
-	m := 12
+	if year < s.date.Year() {
+		return nil, noListed
+	}
+
+	start := 0
+	if year == s.date.Year() {
+		start = int(s.date.Month()) - 1
+	}
+
+	end := 12
 	t := time.Now()
 	if year == t.Year() {
-		m = int(t.Month())
+		end = int(t.Month())
 	}
 
 	ch := make(chan error)
@@ -73,12 +84,12 @@ func (s *Security) Year(year int) ([]crawler.Daily, error) {
 
 	wg := sync.WaitGroup{}
 	yr := make(map[int][]crawler.Daily)
-	for i := 0; i < m; i++ {
+	for i := start; i < end; i++ {
 		wg.Add(1)
-		go func(j int) {
+		go func(m int) {
 			defer wg.Done()
 			var err error
-			yr[j], err = s.Month(year, j+1)
+			yr[m], err = s.Month(year, m+1)
 			if err != nil {
 				ch <- err
 			}
@@ -94,10 +105,10 @@ func (s *Security) Year(year int) ([]crawler.Daily, error) {
 		return nil, err
 	}
 
-	for i := 1; i < m; i++ {
-		yr[0] = append(yr[0], yr[i]...)
+	for i := start + 1; i < end; i++ {
+		yr[start] = append(yr[start], yr[i]...)
 	}
-	return yr[0], nil
+	return yr[start], nil
 }
 
 // An Exchange is an instance which implements crawler.Market interface.
