@@ -60,11 +60,11 @@ func TestSearchAndSymbol(t *testing.T) {
 	}
 }
 
-func TestName(t *testing.T) {
-	samples := map[string]string{
-		"2330":   "TSMC",    // Stock
-		"03003X": "YX 03",   // Listing Warrants
-		"9103":   "MEDTECS", // TDR
+func TestNameAndListed(t *testing.T) {
+	samples := map[string][]string{
+		"2330":   []string{"TSMC", "1994/09/05 09:00"},    // Stock
+		"03003X": []string{"YX 03", "2014/07/31 09:00"},   // Listing Warrants
+		"9103":   []string{"MEDTECS", "2002/12/13 09:00"}, // TDR
 	}
 
 	for k := range samples {
@@ -73,8 +73,13 @@ func TestName(t *testing.T) {
 			t.Fatalf("Search %s exits with error: %v", k, err)
 		}
 
-		if got := st.Name(); got != samples[k] {
-			t.Errorf("Name() not match, want: %s, got: %s", samples[k], got)
+		if got := st.Name(); got != samples[k][0] {
+			t.Errorf("Name() not match, want: %s, got: %s", samples[k][0], got)
+		}
+
+		d, _ := time.ParseInLocation(dateFormat, samples[k][1], cst)
+		if got := st.Listed(); !got.Equal(d) {
+			t.Errorf("Listed() not match, want: %v, got: %v", samples[k][1], got)
 		}
 	}
 }

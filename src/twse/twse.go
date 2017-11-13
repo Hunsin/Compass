@@ -7,25 +7,31 @@ import (
 	"time"
 )
 
-// A Stock is an instance which implements crawler.Security interface.
-type Stock struct {
+// A Security is an instance which implements crawler.Security interface.
+type Security struct {
 	code string
 	name string
+	date time.Time
 }
 
-// Symbol returns the code of a stock.
-func (s *Stock) Symbol() string {
+// Symbol returns the code of a security.
+func (s *Security) Symbol() string {
 	return s.code
 }
 
-// Name returns the full name of a stock.
-func (s *Stock) Name() string {
+// Name returns the full name of a security.
+func (s *Security) Name() string {
 	return s.name
 }
 
+// Listed returns the date when the security listed.
+func (s *Security) Listed() time.Time {
+	return s.date
+}
+
 // Date returns a crawler.Daily by given date.
-func (s *Stock) Date(year, month, day int) (crawler.Daily, error) {
-	m, err := query(s.code, year, month)
+func (s *Security) Date(year, month, day int) (crawler.Daily, error) {
+	m, err := s.Month(year, month)
 	if err != nil {
 		return crawler.Daily{}, err
 	}
@@ -41,12 +47,21 @@ func (s *Stock) Date(year, month, day int) (crawler.Daily, error) {
 }
 
 // Month returns a list of crawler.Daily by given year and month.
-func (s *Stock) Month(year, month int) ([]crawler.Daily, error) {
+func (s *Security) Month(year, month int) ([]crawler.Daily, error) {
+
+	// return nil if s hasn't listed at the time
+	if year < s.date.Year() {
+		return []crawler.Daily{}, nil
+	}
+	if year == s.date.Year() && month < int(s.date.Month()) {
+		return []crawler.Daily{}, nil
+	}
+
 	return query(s.code, year, month)
 }
 
 // Year returns a list of crawler.Daily in given year.
-func (s *Stock) Year(year int) ([]crawler.Daily, error) {
+func (s *Security) Year(year int) ([]crawler.Daily, error) {
 	m := 12
 	t := time.Now()
 	if year == t.Year() {
@@ -63,7 +78,7 @@ func (s *Stock) Year(year int) ([]crawler.Daily, error) {
 		go func(j int) {
 			defer wg.Done()
 			var err error
-			yr[j], err = query(s.code, year, j+1)
+			yr[j], err = s.Month(year, j+1)
 			if err != nil {
 				ch <- err
 			}

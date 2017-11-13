@@ -18,7 +18,7 @@ var (
 )
 
 // parseISIN extracts the Security from urlISIN with given code
-func parseISIN(code string) (*Stock, error) {
+func parseISIN(code string) (*Security, error) {
 	<-iPermit
 	defer func() {
 		time.Sleep(80 * time.Millisecond) // release after 0.08s
@@ -42,14 +42,17 @@ func parseISIN(code string) (*Stock, error) {
 	}
 
 	td := reg.FindAllSubmatch(tr[1], -1)
-	if len(td) < 4 {
+	if len(td) < 8 {
 		return nil, fmt.Errorf("twse: Code %s not found", code)
 	}
 
 	n := bytes.TrimSuffix(td[3][0][1:], tdEndTag)
-	return &Stock{
+	d := bytes.TrimSuffix(td[7][0][1:], tdEndTag)
+	t, _ := time.ParseInLocation(dateFormat, string(d)+" 09:00", cst)
+	return &Security{
 		code: code,
 		name: string(bytes.TrimSpace(n)),
+		date: t,
 	}, nil
 }
 
