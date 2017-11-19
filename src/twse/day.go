@@ -4,60 +4,24 @@ import (
 	"crawler"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	"io"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	urlStock   = "http://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=json&date=%4d%02d%02d&stockNo=%s"
-	dateFormat = "2006/01/02 15:04"
-)
+const dateFormat = "2006/01/02 15:04"
 
 var (
-	cst    *time.Location
-	client = &http.Client{Timeout: time.Duration(8 * time.Second)}
-	permit = make(chan bool)
+	cst *time.Location
+	day = newAgent("http://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=json&date=%4d%02d%02d&stockNo=%s")
 )
 
-type apiStock struct {
+type apiDay struct {
 	Data   [][]string `json:"data"`
 	Date   string     `json:"date"`
 	Fields []string   `json:"fields"`
 	Stat   string     `json:"stat"`
-}
-
-// parseAPI decodes the JSON-encoded data from given url and stores it into v
-func parseAPI(url string, v interface{}) error {
-	res, err := client.Get(url)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	return json.NewDecoder(res.Body).Decode(v)
-}
-
-// parseAgent calls parseAPI once permit is available and returns permit after
-// it's finished. If an error occurred when calling parseAPI, it tries again
-// after few seconds.
-func parseAgent(url string, v interface{}) error {
-	<-permit
-	defer func() {
-		time.Sleep(80 * time.Millisecond) // release after 0.08s
-		go func() { permit <- true }()
-	}()
-
-	err := parseAPI(url, v)
-	if err != nil {
-
-		// extensive requests may cause the client being block by TWSE
-		// wait for 16 seconds and try again
-		time.Sleep(16 * time.Second)
-		return parseAPI(url, v)
-	}
-
-	return nil
 }
 
 func query(code string, year, month int) ([]crawler.Daily, error) {
@@ -71,13 +35,15 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 	}
 
 	// the first date available is 1992/01/04
-	day := 1
+	d := 1
 	if year == 1992 {
-		day = 4
+		d = 4
 	}
 
-	st := apiStock{}
-	err := parseAgent(fmt.Sprintf(urlStock, year, month, day, code), &st)
+	st := apiDay{}
+	err := day.do(func(r io.Reader) error {
+		return json.NewDecoder(r).Decode(&st)
+	}, year, month, d, code)
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +80,4 @@ func init() {
 	if err != nil {
 		cst = time.FixedZone("Asia/Taipei", 8)
 	}
-
-	go func() { permit <- true }()
 }
