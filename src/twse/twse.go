@@ -13,6 +13,7 @@ var noListed = &crawler.ErrNotListed{Err: "twse: Security not listed"}
 type Security struct {
 	code string
 	name string
+	tp   string
 	date time.Time
 }
 
@@ -24,6 +25,11 @@ func (s *Security) Symbol() string {
 // Name returns the full name of a security.
 func (s *Security) Name() string {
 	return s.name
+}
+
+// Type returns the type of a security.
+func (s *Security) Type() string {
+	return s.tp
 }
 
 // Listed returns the date when the security listed.

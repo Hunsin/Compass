@@ -21,6 +21,7 @@ type Daily struct {
 type Security interface {
 	Symbol() string
 	Name() string
+	Type() string
 	Listed() time.Time
 	Date(year, month, date int) (Daily, error)
 	Month(year, month int) ([]Daily, error)

@@ -60,11 +60,12 @@ func TestSearchAndSymbol(t *testing.T) {
 	}
 }
 
-func TestNameAndListed(t *testing.T) {
+func TestProperties(t *testing.T) {
 	samples := map[string][]string{
-		"2330":   []string{"TSMC", "1994/09/05 09:00"},    // Stock
-		"03003X": []string{"YX 03", "2014/07/31 09:00"},   // Listing Warrants
-		"9103":   []string{"MEDTECS", "2002/12/13 09:00"}, // TDR
+		"2330":   []string{"TSMC", "Stocks", "1994/09/05 09:00"},            // Stock
+		"0052":   []string{"FB TECHNOLOGY", "ETF", "2006/09/12 09:00"},      // ETF
+		"03003X": []string{"YX 03", "Listing Warrants", "2014/07/31 09:00"}, // Listing Warrants
+		"9103":   []string{"MEDTECS", "TDR", "2002/12/13 09:00"},            // TDR
 	}
 
 	for k := range samples {
@@ -77,9 +78,13 @@ func TestNameAndListed(t *testing.T) {
 			t.Errorf("Name() not match, want: %s, got: %s", samples[k][0], got)
 		}
 
-		d, _ := time.ParseInLocation(dateFormat, samples[k][1], cst)
+		if got := st.Type(); got != samples[k][1] {
+			t.Errorf("Type() not match, want: %s, got: %s", samples[k][1], got)
+		}
+
+		d, _ := time.ParseInLocation(dateFormat, samples[k][2], cst)
 		if got := st.Listed(); !got.Equal(d) {
-			t.Errorf("Listed() not match, want: %v, got: %v", samples[k][1], got)
+			t.Errorf("Listed() not match, want: %v, got: %v", samples[k][2], got)
 		}
 	}
 }

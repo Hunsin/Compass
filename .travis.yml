@@ -10,10 +10,8 @@ services: postgresql
 
 before_install: export GOPATH=$TRAVIS_BUILD_DIR
 
-before_script:
-  - psql -c 'create database bucket;' -U postgres
-  - psql -c 'create role $USER superuser;' -U postgres
+before_script: psql -c 'create database bucket;' -U postgres
 
 script:
   - go test -v twse
-  - go test -v bucket
+  - go test -v bucket -user postgres
