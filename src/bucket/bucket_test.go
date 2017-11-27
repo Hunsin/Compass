@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"testing"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -18,7 +19,7 @@ var (
 
 func init() {
 	flag.StringVar(&host, "host", "localhost", "bucket test database host")
-	flag.StringVar(&name, "name", "bucket", "bucket test database name")
+	flag.StringVar(&name, "db", "bucket", "bucket test database name")
 	flag.StringVar(&usr, "user", os.Getenv("USER"), "bucket test database user")
 	flag.StringVar(&pwd, "pwd", "pwd", "bucket test database password")
 	flag.BoolVar(&ssl, "ssl", false, "bucket test database ssl mode")
@@ -34,15 +35,22 @@ func TestMain(m *testing.M) {
 
 func TestOpen(t *testing.T) {
 	var err error
-	bk, err = Open(host, port, name, usr, pwd, ssl)
+	_, err = Open(host, port, name, usr, pwd, ssl)
 	if err != nil {
 		t.Errorf("Open exits with error %v", err)
 	}
 }
 
-func TestCreateTables(t *testing.T) {
-	err := bk.CreateTables()
+func TestInitTables(t *testing.T) {
+	err := bk.InitTables()
 	if err != nil {
-		t.Errorf("CreateTables exits with error %v", err)
+		t.Errorf("InitTables exits with error %v", err)
+	}
+
+	for _, n := range []string{"averages", "daily", "securities"} {
+		_, err = bk.db.Exec("DROP TABLE " + n)
+		if err != nil {
+			t.Errorf("Table %s not created, exits with error %v", t, err)
+		}
 	}
 }
