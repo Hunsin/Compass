@@ -16,6 +16,7 @@ const (
 
 	tableDaily = `
 		CREATE TABLE IF NOT EXISTS daily (
+			id     SERIAL PRIMARY KEY,
 			symbol TEXT NOT NULL REFERENCES securities (symbol),
 			date   DATE NOT NULL,
 			open   DOUBLE PRECISION NOT NULL,
@@ -24,7 +25,13 @@ const (
 			close  DOUBLE PRECISION NOT NULL,
 			volume INTEGER          NOT NULL,
 			avg    DOUBLE PRECISION NOT NULL,
-			week   DOUBLE PRECISION,
+			UNIQUE (symbol, date)			
+		);`
+
+	tableAverages = `
+		CREATE TABLE IF NOT EXISTS averages (
+			id     SERIAL PRIMARY KEY REFERENCES daily (id),
+			week   DOUBLE PRECISION NOT NULL,
 			month  DOUBLE PRECISION,
 			season DOUBLE PRECISION
 		);`
@@ -54,9 +61,9 @@ func Open(host string, port int, name, usr, pwd string, ssl bool) (*Bucket, erro
 	return &Bucket{db}, db.Ping()
 }
 
-// CreateTables executes the statements which declared as table* constant
-func (b *Bucket) CreateTables() error {
-	for _, t := range []string{tableSecurities, tableDaily} {
+// InitTables executes the statements which declared as table* constant
+func (b *Bucket) InitTables() error {
+	for _, t := range []string{tableSecurities, tableDaily, tableAverages} {
 		if _, err := b.db.Exec(t); err != nil {
 			return err
 		}

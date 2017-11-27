@@ -6,6 +6,14 @@ go:
 
 sudo: required
 
+services: postgresql
+
 before_install: export GOPATH=$TRAVIS_BUILD_DIR
 
-script: go test -v twse
+before_script:
+  - psql -c 'create database bucket;' -U postgres
+  - psql -c 'create role $USER superuser;' -U postgres
+
+script:
+  - go test -v twse
+  - go test -v bucket
