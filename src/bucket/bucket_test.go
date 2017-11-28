@@ -50,7 +50,7 @@ func TestInitTables(t *testing.T) {
 	for _, n := range []string{"averages", "daily", "securities"} {
 		_, err = bk.db.Exec("DROP TABLE " + n)
 		if err != nil {
-			t.Errorf("Table %s not created, exits with error %v", t, err)
+			t.Errorf("Table %s not created, exits with error %v", n, err)
 		}
 	}
 }

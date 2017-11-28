@@ -36,11 +36,11 @@ type Market interface {
 // An ErrNotListed represents an error when trying to get trading data of
 // a Security at the date before it is listed.
 type ErrNotListed struct {
-	Err string
+	err string
 }
 
 func (nl *ErrNotListed) Error() string {
-	return nl.Err
+	return nl.err
 }
 
 var (
