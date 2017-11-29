@@ -74,6 +74,10 @@ func TestProperties(t *testing.T) {
 			t.Fatalf("Search %s exits with error: %v", k, err)
 		}
 
+		if got := st.Market(); got != "TWSE" {
+			t.Errorf("Market() not match, want: TWSE, got: %s", got)
+		}
+
 		if got := st.Name(); got != samples[k][0] {
 			t.Errorf("Name() not match, want: %s, got: %s", samples[k][0], got)
 		}

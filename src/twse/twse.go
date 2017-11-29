@@ -22,6 +22,11 @@ func (s *Security) Symbol() string {
 	return s.code
 }
 
+// Market returns the abbreviation of the security's market.
+func (s *Security) Market() string {
+	return "TWSE"
+}
+
 // Name returns the full name of a security.
 func (s *Security) Name() string {
 	return s.name

@@ -20,6 +20,7 @@ type Daily struct {
 // A Security is a financial instrument in a market.
 type Security interface {
 	Symbol() string
+	Market() string
 	Name() string
 	Type() string
 	Listed() time.Time
