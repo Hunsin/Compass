@@ -15,5 +15,6 @@ before_script:
   - psql -c 'create database bucket;' -U postgres
 
 script:
+  - go test -v crawler
   - go test -v twse
   - go test -v bucket -user postgres

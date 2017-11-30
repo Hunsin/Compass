@@ -17,7 +17,7 @@ type Daily struct {
 	Avg    float64
 }
 
-// A Security is a financial instrument in a market.
+// A Security represents a financial instrument in a market.
 type Security interface {
 	Symbol() string
 	Market() string
