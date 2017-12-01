@@ -8,32 +8,38 @@ import (
 const (
 	tableSecurities = `
 		CREATE TABLE IF NOT EXISTS securities (
-			symbol TEXT NOT NULL PRIMARY KEY,
-			name   TEXT NOT NULL,
+			id     SERIAL PRIMARY KEY,
+			symbol TEXT NOT NULL,
+			market TEXT NOT NULL,
+			name   TEXT NOT NULL UNIQUE,
 			listed DATE NOT NULL,
-			type   TEXT
+			type   TEXT,
+			UNIQUE (symbol, market)
 		);`
 
 	tableDaily = `
 		CREATE TABLE IF NOT EXISTS daily (
-			id     SERIAL PRIMARY KEY,
-			symbol TEXT NOT NULL REFERENCES securities (symbol),
-			date   DATE NOT NULL,
-			open   DOUBLE PRECISION NOT NULL,
-			high   DOUBLE PRECISION NOT NULL,
-			low    DOUBLE PRECISION NOT NULL,
-			close  DOUBLE PRECISION NOT NULL,
-			volume INTEGER          NOT NULL,
-			avg    DOUBLE PRECISION NOT NULL,
-			UNIQUE (symbol, date)			
+			id       SERIAL PRIMARY KEY,
+			security SERIAL NOT NULL REFERENCES securities (id),
+			date     DATE   NOT NULL,
+			open     DOUBLE PRECISION NOT NULL,
+			high     DOUBLE PRECISION NOT NULL,
+			low      DOUBLE PRECISION NOT NULL,
+			close    DOUBLE PRECISION NOT NULL,
+			volume   INTEGER          NOT NULL,
+			avg      DOUBLE PRECISION NOT NULL,
+			UNIQUE   (security, date)			
 		);`
 
 	tableAverages = `
 		CREATE TABLE IF NOT EXISTS averages (
-			id     SERIAL PRIMARY KEY REFERENCES daily (id),
-			week   DOUBLE PRECISION NOT NULL,
-			month  DOUBLE PRECISION,
-			season DOUBLE PRECISION
+			id        SERIAL PRIMARY KEY REFERENCES daily (id),
+			price_5   DOUBLE PRECISION NOT NULL,
+			price_20  DOUBLE PRECISION,
+			price_60  DOUBLE PRECISION,
+			volume_5  DOUBLE PRECISION NOT NULL,
+			volume_20 DOUBLE PRECISION,
+			volume_60 DOUBLE PRECISIO
 		);`
 )
 
