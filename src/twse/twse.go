@@ -14,7 +14,7 @@ type Security struct {
 	code string
 	name string
 	tp   string
-	date time.Time
+	lstd crawler.Date
 }
 
 // Symbol returns the code of a security.
@@ -38,8 +38,8 @@ func (s *Security) Type() string {
 }
 
 // Listed returns the date when the security listed.
-func (s *Security) Listed() time.Time {
-	return s.date
+func (s *Security) Listed() crawler.Date {
+	return s.lstd
 }
 
 // Date returns a crawler.Daily by given date.
@@ -50,7 +50,7 @@ func (s *Security) Date(year, month, day int) (crawler.Daily, error) {
 	}
 
 	for d := range m {
-		if m[d].Date.Day() == day {
+		if m[d].Date.Day == day {
 			return m[d], nil
 		}
 	}
@@ -63,10 +63,10 @@ func (s *Security) Date(year, month, day int) (crawler.Daily, error) {
 func (s *Security) Month(year, month int) ([]crawler.Daily, error) {
 
 	// return error if s hasn't listed at the time
-	if year < s.date.Year() {
+	if year < s.lstd.Year {
 		return nil, noListed
 	}
-	if year == s.date.Year() && month < int(s.date.Month()) {
+	if year == s.lstd.Year && month < int(s.lstd.Month) {
 		return nil, noListed
 	}
 
@@ -75,13 +75,13 @@ func (s *Security) Month(year, month int) ([]crawler.Daily, error) {
 
 // Year returns a list of crawler.Daily in given year.
 func (s *Security) Year(year int) ([]crawler.Daily, error) {
-	if year < s.date.Year() {
+	if year < s.lstd.Year {
 		return nil, noListed
 	}
 
 	start := 0
-	if year == s.date.Year() {
-		start = int(s.date.Month()) - 1
+	if year == s.lstd.Year {
+		start = int(s.lstd.Month) - 1
 	}
 
 	end := 12

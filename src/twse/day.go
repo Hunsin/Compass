@@ -10,12 +10,9 @@ import (
 	"time"
 )
 
-const dateFormat = "2006/01/02 15:04"
+const dateFormat = "2006/01/02"
 
-var (
-	cst *time.Location
-	day = newAgent("http://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=json&date=%4d%02d%02d&stockNo=%s")
-)
+var day = newAgent("http://www.twse.com.tw/en/exchangeReport/STOCK_DAY?response=json&date=%4d%02d%02d&stockNo=%s")
 
 type apiDay struct {
 	Data   [][]string `json:"data"`
@@ -54,8 +51,7 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 
 	ds := []crawler.Daily{}
 	for i := range st.Data {
-		// default closed time 14:30
-		t, _ := time.ParseInLocation(dateFormat, st.Data[i][0]+" 14:30", cst)
+		d, _ := crawler.ParseDate(dateFormat, st.Data[i][0])
 		v, _ := strconv.Atoi(strings.Replace(st.Data[i][1], ",", "", -1))
 		s, _ := strconv.Atoi(strings.Replace(st.Data[i][2], ",", "", -1))
 		o, _ := strconv.ParseFloat(strings.Replace(st.Data[i][3], ",", "", -1), 64)
@@ -63,7 +59,7 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 		l, _ := strconv.ParseFloat(strings.Replace(st.Data[i][5], ",", "", -1), 64)
 		c, _ := strconv.ParseFloat(strings.Replace(st.Data[i][6], ",", "", -1), 64)
 		ds = append(ds, crawler.Daily{
-			Date:   t,
+			Date:   d,
 			Open:   o,
 			High:   h,
 			Low:    l,
@@ -72,12 +68,4 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 			Avg:    float64(s) / float64(v)})
 	}
 	return ds, nil
-}
-
-func init() {
-	var err error
-	cst, err = time.LoadLocation("Asia/Taipei")
-	if err != nil {
-		cst = time.FixedZone("Asia/Taipei", 8)
-	}
 }
