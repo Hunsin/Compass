@@ -62,6 +62,20 @@ func (d Date) MarshalText() ([]byte, error) {
 	return append(b, s...), nil
 }
 
+// Scan implements the database/sql.Scanner interface.
+func (d *Date) Scan(v interface{}) error {
+	switch s := v.(type) {
+	case time.Time:
+		*d = Date{Year: s.Year(), Month: s.Month(), Day: s.Day()}
+		return nil
+	case []byte:
+		return d.UnmarshalText(s)
+	case string:
+		return d.UnmarshalText([]byte(s))
+	}
+	return fmt.Errorf("crawler.Date: Unsupport scanning type %T", v)
+}
+
 // String returns a string of date in "2006/01/02" format.
 func (d Date) String() string {
 	return fmt.Sprintf("%4d/%02d/%02d", d.Year, d.Month, d.Day)
