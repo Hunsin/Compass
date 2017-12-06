@@ -1,8 +1,15 @@
 package crawler
 
 import (
+	"database/sql"
+	"flag"
+	"fmt"
+	"os"
 	"testing"
 	"time"
+
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -19,6 +26,30 @@ var (
 		"15 Nov 2009",
 	}
 )
+
+var (
+	host string
+	port int
+	name string
+	usr  string
+	pwd  string
+	ssl  string
+)
+
+func init() {
+	flag.StringVar(&host, "host", "localhost", "crawler test database host")
+	flag.StringVar(&name, "db", "crawler", "crawler test database name")
+	flag.StringVar(&usr, "user", os.Getenv("USER"), "crawler test database user")
+	flag.StringVar(&pwd, "pwd", "pwd", "crawler test database password")
+	flag.StringVar(&ssl, "ssl", "disable", "crawler test database ssl mode")
+	flag.IntVar(&port, "port", 5432, "crawler test database port")
+}
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	c := m.Run()
+	os.Exit(c)
+}
 
 func TestParseDate(t *testing.T) {
 	layouts := []string{
@@ -93,6 +124,35 @@ func TestMarshalText(t *testing.T) {
 	w := f1[0]
 	if string(b) != w {
 		t.Errorf("Date.MarshalText failed. want: %s, got: %s", w, string(b))
+	}
+}
+
+func TestScan(t *testing.T) {
+	cfg := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
+		host, port, name, usr, pwd, ssl)
+
+	s := [][]string{
+		[]string{"postgres", cfg, "SELECT now()::date;"},
+		[]string{"sqlite3", ":memory:", "SELECT date('now');"},
+	}
+	d := Date{}
+	n := time.Now()
+
+	for i := range s {
+		db, err := sql.Open(s[i][0], s[i][1])
+		if err != nil {
+			t.Errorf("Open database %s exit with error: %v", s[i][0], err)
+			continue
+		}
+		row := db.QueryRow(s[i][2])
+		err = row.Scan(&d)
+		if err != nil {
+			t.Errorf("%s scanning exits with error: %v", s[i][0], err)
+		}
+
+		if d.Year != n.Year() || d.Month != n.Month() || d.Day != n.Day() {
+			t.Errorf("Date.Scan failed: want: %s, got: %v", n.Format("2006/01/02"), d)
+		}
 	}
 }
 
