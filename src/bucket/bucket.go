@@ -39,7 +39,7 @@ const (
 			price_60  DOUBLE PRECISION,
 			volume_5  DOUBLE PRECISION NOT NULL,
 			volume_20 DOUBLE PRECISION,
-			volume_60 DOUBLE PRECISIO
+			volume_60 DOUBLE PRECISION
 		);`
 )
 

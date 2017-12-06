@@ -13,9 +13,9 @@ before_install: export GOPATH=$TRAVIS_BUILD_DIR
 before_script:
   - go get github.com/lib/pq
   - go get github.com/mattn/go-sqlite3
-  - psql -c 'create database bucket;' -U postgres
+  - psql -c 'create database compass;' -U postgres
 
 script:
-  - go test -v crawler -user postgres
+  - go test -v crawler -user postgres -db compass
   - go test -v twse
-  - go test -v bucket -user postgres
+  - go test -v bucket -user postgres -db compass
