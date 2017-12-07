@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"testing"
+
 	_ "github.com/lib/pq"
 )
 
