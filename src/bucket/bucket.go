@@ -17,8 +17,8 @@ const (
 			UNIQUE (symbol, market)
 		);`
 
-	tableDaily = `
-		CREATE TABLE IF NOT EXISTS daily (
+	tableRecords = `
+		CREATE TABLE IF NOT EXISTS records (
 			id       SERIAL PRIMARY KEY,
 			security SERIAL NOT NULL REFERENCES securities (id),
 			date     DATE   NOT NULL,
@@ -28,24 +28,33 @@ const (
 			close    DOUBLE PRECISION NOT NULL,
 			volume   INTEGER          NOT NULL,
 			avg      DOUBLE PRECISION NOT NULL,
-			UNIQUE   (security, date)			
+			UNIQUE   (security, date)
 		);`
 
 	tableAverages = `
 		CREATE TABLE IF NOT EXISTS averages (
-			id        SERIAL PRIMARY KEY REFERENCES daily (id),
+			id        SERIAL PRIMARY KEY REFERENCES records (id),
 			price_5   DOUBLE PRECISION NOT NULL,
 			price_20  DOUBLE PRECISION,
 			price_60  DOUBLE PRECISION,
 			volume_5  DOUBLE PRECISION NOT NULL,
 			volume_20 DOUBLE PRECISION,
-			volume_60 DOUBLE PRECISIO
+			volume_60 DOUBLE PRECISION
 		);`
 )
 
 // A Bucket represents a database client
 type Bucket struct {
 	db *sql.DB
+}
+
+// An ErrNoFound represents an error
+type ErrNoFound struct {
+	msg string
+}
+
+func(e *ErrNoFound) Error() string {
+	return "bucket: " + msg
 }
 
 // Open connects to database and initializes the db instance by given configuration
@@ -69,7 +78,7 @@ func Open(host string, port int, name, usr, pwd string, ssl bool) (*Bucket, erro
 
 // InitTables executes the statements which declared as table* constant
 func (b *Bucket) InitTables() error {
-	for _, t := range []string{tableSecurities, tableDaily, tableAverages} {
+	for _, t := range []string{tableSecurities, tableRecords, tableAverages} {
 		if _, err := b.db.Exec(t); err != nil {
 			return err
 		}
