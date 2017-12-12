@@ -27,10 +27,20 @@ func init() {
 	flag.IntVar(&port, "port", 5432, "bucket test database port")
 }
 
+func dropTables(t *testing.T) {
+	for _, n := range []string{"averages", "records", "securities"} {
+		_, err := bk.db.Exec("DROP TABLE " + n)
+		if t != nil && err != nil {
+			t.Errorf("Table %s not created, exits with error %v", n, err)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	flag.Parse()
 	bk, _ = Open(host, port, name, usr, pwd, ssl)
 	c := m.Run()
+	dropTables(nil)
 	os.Exit(c)
 }
 
@@ -48,10 +58,5 @@ func TestInitTables(t *testing.T) {
 		t.Errorf("InitTables exits with error %v", err)
 	}
 
-	for _, n := range []string{"averages", "records", "securities"} {
-		_, err = bk.db.Exec("DROP TABLE " + n)
-		if err != nil {
-			t.Errorf("Table %s not created, exits with error %v", n, err)
-		}
-	}
+	dropTables(t)
 }

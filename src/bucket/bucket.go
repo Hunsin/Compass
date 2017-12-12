@@ -53,8 +53,8 @@ type ErrNoFound struct {
 	msg string
 }
 
-func(e *ErrNoFound) Error() string {
-	return "bucket: " + msg
+func (e *ErrNoFound) Error() string {
+	return "bucket: " + e.msg
 }
 
 // Open connects to database and initializes the db instance by given configuration
