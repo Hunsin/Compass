@@ -23,6 +23,12 @@ func ParseDate(layout, d string) (Date, error) {
 	return Date{t.Year(), t.Month(), t.Day()}, nil
 }
 
+// Today returns the current local date.
+func Today() Date {
+	t := time.Now()
+	return Date{t.Year(), t.Month(), t.Day()}
+}
+
 // After reports whether d is after t.
 func (d Date) After(t Date) bool {
 	if d.Year != t.Year {
