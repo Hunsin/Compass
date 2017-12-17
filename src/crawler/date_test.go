@@ -78,9 +78,9 @@ func TestParseDate(t *testing.T) {
 
 func TestToday(t *testing.T) {
 	d := Today()
-	t := time.Now()
-	if d.Year != t.Year() || d.Month != t.Month() || d.Day != t.Day() {
-		t.Errorf("Today failed. Want: %s, got: %v", t.Format("2006/01/02"), d)
+	n := time.Now()
+	if d.Year != n.Year() || d.Month != n.Month() || d.Day != n.Day() {
+		t.Errorf("Today failed. Want: %s, got: %v", n.Format("2006/01/02"), d)
 	}
 }
 
