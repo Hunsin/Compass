@@ -3,6 +3,7 @@ package bucket
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -58,7 +59,7 @@ func (e *ErrNoFound) Error() string {
 }
 
 // Open connects to database and initializes the db instance by given configuration
-func Open(host string, port int, name, usr, pwd string, ssl bool) (*Bucket, error) {
+func Open(host string, port uint, name, usr, pwd string, ssl bool) (*Bucket, error) {
 	s := "disable"
 	if ssl {
 		s = "enable"
@@ -66,6 +67,11 @@ func Open(host string, port int, name, usr, pwd string, ssl bool) (*Bucket, erro
 
 	cfg := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
 		host, port, name, usr, pwd, s)
+
+	// remove empty value
+	for _, str := range []string{"host= ", "dbname= ", "user= ", "password= "} {
+		cfg = strings.Replace(cfg, str, "", 1)
+	}
 
 	var err error
 	db, err := sql.Open("postgres", cfg)

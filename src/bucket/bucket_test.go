@@ -11,7 +11,7 @@ import (
 var (
 	bk   *Bucket
 	host string
-	port int
+	port uint
 	name string
 	usr  string
 	pwd  string
@@ -24,7 +24,7 @@ func init() {
 	flag.StringVar(&usr, "user", os.Getenv("USER"), "bucket test database user")
 	flag.StringVar(&pwd, "pwd", "", "bucket test database password")
 	flag.BoolVar(&ssl, "ssl", false, "bucket test database ssl mode")
-	flag.IntVar(&port, "port", 5432, "bucket test database port")
+	flag.UintVar(&port, "port", 5432, "bucket test database port")
 }
 
 func dropTables(t *testing.T) {
