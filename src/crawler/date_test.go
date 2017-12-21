@@ -196,3 +196,31 @@ func TestUnmarshalText(t *testing.T) {
 		}
 	}
 }
+
+func TestValue(t *testing.T) {
+	cfg := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
+		host, port, name, usr, pwd, ssl)
+
+	s := [][]string{
+		[]string{"postgres", cfg, "SELECT $1::date;"},
+		[]string{"sqlite3", ":memory:", "SELECT date(?);"},
+	}
+	d := Date{}
+
+	for i := range s {
+		db, err := sql.Open(s[i][0], s[i][1])
+		if err != nil {
+			t.Errorf("Open database %s exit with error: %v", s[i][0], err)
+			continue
+		}
+		row := db.QueryRow(s[i][2], d1)
+		err = row.Scan(&d)
+		if err != nil {
+			t.Errorf("%s scanning exits with error: %v", s[i][0], err)
+		}
+
+		if !d.Equal(d1) {
+			t.Errorf("Date.Value failed: want: %v, got: %v", d1, d)
+		}
+	}
+}

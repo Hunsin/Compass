@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"time"
 )
@@ -116,4 +117,9 @@ func (d *Date) UnmarshalText(b []byte) error {
 
 	*d = Date{t.Year(), t.Month(), t.Day()}
 	return nil
+}
+
+// Value implements the sql/driver Valuer interface.
+func (d Date) Value() (driver.Value, error) {
+	return d.String(), nil
 }
