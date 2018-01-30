@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Hunsin/date"
 )
 
 const dateFormat = "2006/01/02"
@@ -51,7 +53,7 @@ func query(code string, year, month int) ([]crawler.Daily, error) {
 
 	ds := []crawler.Daily{}
 	for i := range st.Data {
-		d, _ := crawler.ParseDate(dateFormat, st.Data[i][0])
+		d, _ := date.Parse(dateFormat, st.Data[i][0])
 		v, _ := strconv.Atoi(strings.Replace(st.Data[i][1], ",", "", -1))
 		s, _ := strconv.Atoi(strings.Replace(st.Data[i][2], ",", "", -1))
 		o, _ := strconv.ParseFloat(strings.Replace(st.Data[i][3], ",", "", -1), 64)

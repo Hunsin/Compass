@@ -2,11 +2,12 @@ package twse
 
 import (
 	"bytes"
-	"crawler"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"regexp"
+
+	"github.com/Hunsin/date"
 )
 
 var (
@@ -43,7 +44,7 @@ func parseISIN(code string) (*Security, error) {
 		n := bytes.TrimSuffix(td[3][0][1:], tdEndTag)
 		p := bytes.TrimSuffix(td[5][0][1:], tdEndTag)
 		d := bytes.TrimSuffix(td[7][0][1:], tdEndTag)
-		l, _ := crawler.ParseDate(dateFormat, string(d))
+		l, _ := date.Parse(dateFormat, string(d))
 		st = &Security{
 			code: code,
 			name: string(bytes.TrimSpace(n)),

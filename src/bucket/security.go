@@ -4,6 +4,8 @@ import (
 	"crawler"
 	"database/sql"
 	"errors"
+
+	"github.com/Hunsin/date"
 )
 
 const (
@@ -19,7 +21,7 @@ type Security struct {
 	Symbol string
 	Market string
 	Name   string
-	Listed crawler.Date
+	Listed date.Date
 	Type   string
 }
 

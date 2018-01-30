@@ -3,11 +3,13 @@ package crawler
 import (
 	"errors"
 	"sync"
+
+	"github.com/Hunsin/date"
 )
 
 // A Daily represents the daily trading data of a Security.
 type Daily struct {
-	Date   Date
+	Date   date.Date
 	Open   float64
 	High   float64
 	Low    float64
@@ -22,7 +24,7 @@ type Security interface {
 	Market() string
 	Name() string
 	Type() string
-	Listed() Date
+	Listed() date.Date
 	Date(year, month, date int) (Daily, error)
 	Month(year, month int) ([]Daily, error)
 	Year(int) ([]Daily, error)

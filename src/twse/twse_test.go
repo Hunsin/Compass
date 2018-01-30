@@ -4,6 +4,8 @@ import (
 	"crawler"
 	"math"
 	"testing"
+
+	"github.com/Hunsin/date"
 )
 
 var (
@@ -85,7 +87,7 @@ func TestProperties(t *testing.T) {
 			t.Errorf("Type() not match, want: %s, got: %s", samples[k][1], got)
 		}
 
-		d, _ := crawler.ParseDate(dateFormat, samples[k][2])
+		d, _ := date.Parse(dateFormat, samples[k][2])
 		if got := st.Listed(); !got.Equal(d) {
 			t.Errorf("Listed() not match, want: %v, got: %v", samples[k][2], got)
 		}
@@ -93,7 +95,7 @@ func TestProperties(t *testing.T) {
 }
 
 func TestDate(t *testing.T) {
-	dt, _ := crawler.ParseDate(dateFormat, "2017/11/06")
+	dt, _ := date.Parse(dateFormat, "2017/11/06")
 
 	// 2017/11/06 data of TSMC(2330) and LARGAN(3008)
 	samples := map[string]crawler.Daily{

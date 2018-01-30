@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/Hunsin/date"
 )
 
 var noListed = &crawler.ErrNotListed{Err: "twse: Security not listed"}
@@ -14,7 +16,7 @@ type Security struct {
 	code string
 	name string
 	tp   string
-	lstd crawler.Date
+	lstd date.Date
 }
 
 // Symbol returns the code of a security.
@@ -38,7 +40,7 @@ func (s *Security) Type() string {
 }
 
 // Listed returns the date when the security listed.
-func (s *Security) Listed() crawler.Date {
+func (s *Security) Listed() date.Date {
 	return s.lstd
 }
 
