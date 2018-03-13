@@ -1,10 +1,10 @@
 package twse
 
 import (
-	"crawler"
 	"math"
 	"testing"
 
+	"github.com/Hunsin/compass/crawler"
 	"github.com/Hunsin/date"
 )
 

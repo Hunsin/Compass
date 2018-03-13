@@ -1,7 +1,6 @@
 package twse
 
 import (
-	"crawler"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hunsin/compass/crawler"
 	"github.com/Hunsin/date"
 )
 

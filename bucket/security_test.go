@@ -1,10 +1,11 @@
 package bucket
 
 import (
-	"crawler"
 	"testing"
 
-	_ "twse"
+	"github.com/Hunsin/compass/crawler"
+
+	_ "github.com/Hunsin/compass/twse"
 )
 
 var tsmc, ttt crawler.Security

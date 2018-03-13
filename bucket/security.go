@@ -1,10 +1,10 @@
 package bucket
 
 import (
-	"crawler"
 	"database/sql"
 	"errors"
 
+	"github.com/Hunsin/compass/crawler"
 	"github.com/Hunsin/date"
 )
 

@@ -1,11 +1,11 @@
 package twse
 
 import (
-	"crawler"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/Hunsin/compass/crawler"
 	"github.com/Hunsin/date"
 )
 
