@@ -8,14 +8,10 @@ sudo: required
 
 services: postgresql
 
-before_install: export GOPATH=$TRAVIS_BUILD_DIR
-
 before_script:
-  - go get github.com/lib/pq
-  - go get github.com/Hunsin/date
   - psql -c 'create database compass;' -U postgres
 
 script:
-  - go test -v crawler -user postgres -db compass
-  - go test -v twse
-  - go test -v bucket -user postgres -db compass
+  - go test -v github.com/Hunsin/compass/crawler -user postgres -db compass
+  - go test -v github.com/Hunsin/compass/twse
+  - go test -v github.com/Hunsin/compass/bucket -user postgres -db compass

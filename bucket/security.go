@@ -31,7 +31,7 @@ func (b *Bucket) Find(symbol, market string) (*Security, error) {
 	sec := Security{b: b, Symbol: symbol, Market: market}
 	row := b.db.QueryRow(querySecurity, symbol, market)
 	err := row.Scan(&sec.id, &sec.Name, &sec.Listed, &sec.Type)
-	if err != nil && err.Error() == "sql: no rows in result set" {
+	if err != nil && err == sql.ErrNoRows {
 		return nil, &ErrNoFound{"No Security is found"}
 	}
 	return &sec, err
@@ -67,6 +67,25 @@ func (b *Bucket) NewSecurity(cs crawler.Security) (*Security, error) {
 	r := b.db.QueryRow(insertSecurity, ns.Symbol, ns.Market, ns.Name, ns.Listed.String(), ns.Type)
 	return ns, r.Scan(&ns.id)
 }
+
+// Pull downloads full history of s. It creates a new Security
+// func (b *Bucket) Pull(cs crawler.Security) (*Security, error) {
+// 	if cs == nil {
+// 		return nil, errors.New("bucket: A nil crawler.Security is input")
+// 	}
+
+// 	s, err := b.Find(cs.Symbol(), cs.Market())
+// 	if _, ok := err.(*ErrNoFound); ok {
+// 		// downloads all
+// 	} else if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if s.Name != cs.Name() || !s.Listed.Equal(cs.Listed()) || s.Type != cs.Type() {
+// 		return nil, errors.New("bucket: A Security with different properties already exists")
+// 	}
+
+// }
 
 // Securities returns all Securities with specified market stored in the Bucket.
 // All Securities are returned if market equals "".
