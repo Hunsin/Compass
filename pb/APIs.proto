@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pb;
 
-import "trade/trade.proto";
+import "github.com/Hunsin/compass/trade/trade.proto";
 
 service Predator {
 	rpc Markets (trade.Null) returns (stream trade.Market);
