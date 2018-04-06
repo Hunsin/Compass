@@ -1,20 +1,17 @@
 package twse
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"regexp"
+	"strings"
 
 	"github.com/Hunsin/date"
+	hu "github.com/Hunsin/go-htmlutil"
+	"golang.org/x/net/html"
 )
 
 var (
-	reg      = regexp.MustCompile(">.*</td>")
-	tdEndTag = []byte("</td>")
-	trEndTag = []byte("</tr>")
-	isin     = newAgent("http://isin.twse.com.tw/isin/e_class_main.jsp?owncode=%s&market=1")
+	isin = newAgent("http://isin.twse.com.tw/isin/e_class_main.jsp?owncode=%s&market=1")
 )
 
 // parseISIN extracts the Security from urlISIN with given code
@@ -22,34 +19,44 @@ func parseISIN(code string) (*Security, error) {
 	var st *Security
 	var e error
 	err := isin.do(func(r io.Reader) error {
-		out, _ := ioutil.ReadAll(r)
+		n, err := html.Parse(r)
+		if err != nil {
+			return err
+		}
 
-		if bytes.Contains(out, []byte("an inactive ISIN")) {
+		var c *html.Node
+		hu.Last(n, func(n *html.Node) (found bool) {
+			if found = n.Data == "td" && hu.Text(n) == code; found {
+				c = n
+			}
+			return
+		})
+
+		// return error if no <td> node with code found
+		if c == nil {
 			e = fmt.Errorf("twse: Code %s not found", code)
 			return nil
 		}
 
-		tr := bytes.Split(out, trEndTag)
-		if len(tr) < 2 {
-			e = fmt.Errorf("twse: Code %s not found", code)
-			return nil
+		// push text contents of each <td> to slice
+		var str []string
+		for c = c.Parent.FirstChild; c != nil; c = c.NextSibling {
+			if c.Data == "td" {
+				str = append(str, hu.Text(c))
+			}
 		}
 
-		td := reg.FindAllSubmatch(tr[1], -1)
-		if len(td) < 8 {
-			e = fmt.Errorf("twse: Code %s not found", code)
-			return nil
+		// prevent panic
+		if len(str) < 7 {
+			return fmt.Errorf("twse: can not parse data of code %s", code)
 		}
 
-		n := bytes.TrimSuffix(td[3][0][1:], tdEndTag)
-		p := bytes.TrimSuffix(td[5][0][1:], tdEndTag)
-		d := bytes.TrimSuffix(td[7][0][1:], tdEndTag)
-		l, _ := date.Parse(dateFormat, string(d))
+		d, _ := date.Parse(dateFormat, str[7])
 		st = &Security{
 			code: code,
-			name: string(bytes.TrimSpace(n)),
-			tp:   string(bytes.TrimSpace(p)),
-			lstd: l,
+			name: string(strings.TrimSpace(str[3])),
+			tp:   string(strings.TrimSpace(str[5])),
+			lstd: d,
 		}
 		return nil
 	}, code)
