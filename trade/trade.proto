@@ -33,6 +33,3 @@ message Market {
 	string name     = 2;
 	string currency = 3;
 }
-
-// A Null is nothing.
-message Null {}

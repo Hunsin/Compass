@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package pb;
+
+import "github.com/Hunsin/compass/trade/trade.proto";
+
+service Compass {
+	rpc Register (Crawler) returns (Null);
+	rpc Crawlers (Null)    returns (stream Crawler);
+}
+
+service Predator {
+	rpc Markets    (Null)   returns (stream trade.Market);
+	rpc Securities (Filter) returns (stream trade.Security);
+	rpc Records    (Filter) returns (stream trade.Daily);
+}
+
+message Filter {
+	string symbol = 1;
+	string after  = 2;
+	string before = 3;
+	string type   = 4;
+}
+
+message Crawler {
+	string id  = 1;
+	string url = 2;
+}
+
+// A Null is nothing.
+message Null {}
