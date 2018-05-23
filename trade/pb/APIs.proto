@@ -16,10 +16,10 @@ service Predator {
 }
 
 message Filter {
-	string symbol = 1;
-	string after  = 2;
-	string before = 3;
-	string type   = 4;
+	string symbol    = 1;
+	string from_date = 2;
+	string end_date  = 3;
+	string type      = 4;
 }
 
 message Crawler {
