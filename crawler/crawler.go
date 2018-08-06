@@ -4,19 +4,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Hunsin/date"
+	"cloud.google.com/go/civil"
+	"github.com/Hunsin/compass/trade"
 )
-
-// A Daily represents the daily trading data of a Security.
-type Daily struct {
-	Date   date.Date
-	Open   float64
-	High   float64
-	Low    float64
-	Close  float64
-	Volume int
-	Avg    float64
-}
 
 // A Security represents a financial instrument in a market.
 type Security interface {
@@ -24,10 +14,10 @@ type Security interface {
 	Market() string
 	Name() string
 	Type() string
-	Listed() date.Date
-	Date(year, month, date int) (Daily, error)
-	Month(year, month int) ([]Daily, error)
-	Year(int) ([]Daily, error)
+	Listed() civil.Date
+	Date(year, month, date int) (trade.Daily, error)
+	Month(year, month int) ([]trade.Daily, error)
+	Year(int) ([]trade.Daily, error)
 }
 
 // A Market represents an exchange where financial instruments are traded.

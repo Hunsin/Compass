@@ -5,25 +5,29 @@ syntax = "proto3";
 package trade;
 
 // A Daily represents the daily trading data of a Security on
-// a specific date.
+// a specific date. 
 message Daily {
-	string date   = 1;
+	string date   = 1; // date in format "YYYY-MM-DD"
 	double open   = 2;
 	double high   = 3;
 	double low    = 4;
 	double close  = 5;
+
+	//  0: no trading record
+	// -1: halted
 	uint64 volume = 6;
 	double avg    = 7;
 }
 
 // A Security represents a financial instrument in a Market.
 message Security {
-	string market = 1;
-	string isin   = 2;
-	string symbol = 3;
-	string name   = 4;
-	string type   = 5;
-	string listed = 6;
+	string market   = 1;
+	string isin     = 2;
+	string symbol   = 3;
+	string name     = 4;
+	string type     = 5;
+	string listed   = 6; // date in format "YYYY-MM-DD"
+	string delisted = 7; // date in format "YYYY-MM-DD"
 }
 
 // A Market represents an exchange where financial instruments
