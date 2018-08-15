@@ -10,18 +10,20 @@ service Compass {
 }
 
 enum Status {
-	UNKNOWN  = 0;
+	UNKNOWN       = 0;
+	UNIMPLEMENTED = 1;
 
 	// 1xx are query status
 	PING     = 100;
 	SECURITY = 101;
 	QUOTE    = 102;
+	EXIT     = 103;
 	
 	// 2xx are result status
 	DONE    = 200;
 	PARTIAL = 206;
 	
-	// 4xx are error status from results
+	// 4xx are error status due to bad queries
 	BAD_REQUEST = 400;
 	CLOSED      = 401;
 	HALTED      = 402;
@@ -34,7 +36,8 @@ message Result {
 	         Status         status     = 2;
 	         trade.Market   market     = 3;
 	repeated trade.Security securities = 4;
-	repeated trade.Daily    quotes     = 5;
+	repeated trade.Quote    quotes     = 5;
+	         string         error      = 6;
 }
 
 message Query {

@@ -4,16 +4,15 @@ syntax = "proto3";
 // between services.
 package trade;
 
-// A Daily represents the daily trading data of a Security on
+// A Quote represents the daily trading data of a Security on
 // a specific date. 
-message Daily {
+message Quote {
 	string date   = 1; // date in format "YYYY-MM-DD"
 	double open   = 2;
 	double high   = 3;
 	double low    = 4;
 	double close  = 5;
 
-	//  0: no trading record
 	// -1: halted
 	uint64 volume = 6;
 	double avg    = 7;
