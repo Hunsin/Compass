@@ -12,6 +12,7 @@ service Compass {
 enum Status {
 	UNKNOWN       = 0;
 	UNIMPLEMENTED = 1;
+	CANCELLED     = 2;
 
 	// 1xx are query status
 	PING     = 100;
