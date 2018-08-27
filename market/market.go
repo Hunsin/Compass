@@ -6,74 +6,81 @@ import (
 	"sync"
 
 	"cloud.google.com/go/civil"
-	"github.com/Hunsin/compass/trade"
 )
 
-// A Security represents a financial instrument in a market.
-type Security interface {
-	Profile() trade.Security
-	Date(year, month, date int) (trade.Quote, error)
-	Month(year, month int) ([]trade.Quote, error)
-	Year(int) ([]trade.Quote, error)
-
-	// Range returns all daily quotes between the start and end date, included.
-	// If the end date is before the other one, it switches them automatically.
-	// Implementation of the method is optional. If not, an Err with status
-	// pb.Status_UNIMPLEMENTED should returned.
-	Range(start, end civil.Date) ([]trade.Quote, error)
+// A Market represents an exchange where financial instruments are traded.
+type Market struct {
+	Agent
+	q Quoter
 }
 
-// A Market represents an exchange where financial instruments are traded.
-type Market interface {
-	Search(symbol string) (Security, error)
-	List() ([]trade.Security, error)
-	Profile() *trade.Market
+// Search returns a Security with given symbol.
+func (m *Market) Search(symbol string) (*Security, error) {
+	p, err := m.Security(symbol)
+	if err != nil {
+		return nil, err
+	}
+
+	l, err := civil.ParseDate(p.Listed)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Security{p, l, m.q}, nil
 }
 
 var (
-	mu  sync.Mutex
-	mks = make(map[string]Market)
+	mu  sync.RWMutex
+	drs = make(map[string]Driver)
 )
 
 // Register makes the named Market available for querying data.
-func Register(name string, m Market) {
+func Register(name string, d Driver) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if m == nil {
+	if d == nil {
 		panic("market: A nil Market is registered")
 	}
 
 	name = strings.ToLower(name)
-	if _, ok := mks[name]; ok {
+	if _, ok := drs[name]; ok {
 		panic("market: Market " + name + " had been registered twice")
 	}
 
-	mks[name] = m
+	drs[name] = d
 }
 
 // Open returns a registered Market by given name.
-func Open(name string) (Market, error) {
-	mu.Lock()
-	defer mu.Unlock()
+func Open(name string) (*Market, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 
-	m, ok := mks[name]
+	d, ok := drs[name]
 	if !ok {
 		return nil, errors.New("market: Unknown driver " + name)
 	}
 
-	return m, nil
+	a, q, err := d.Open()
+	if err != nil {
+		return nil, err
+	}
+	return &Market{a, q}, nil
 }
 
 // All returns all registered Markets.
-func All() []Market {
-	mu.Lock()
-	defer mu.Unlock()
+func All() ([]*Market, error) {
+	mu.RLock()
+	defer mu.RUnlock()
 
-	var ms []Market
-	for _, m := range mks {
+	var ms []*Market
+	for name := range drs {
+		m, err := Open(name)
+		if err != nil {
+			return nil, err
+		}
 		ms = append(ms, m)
 	}
 
-	return ms
+	return ms, nil
 }
