@@ -83,6 +83,7 @@ func (q *quoter) Year(symbol string, year int) ([]trade.Quote, error) {
 	}
 
 	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
 	yr := make(map[int][]trade.Quote)
 	ch := make(chan error)
 	defer close(ch)
@@ -94,8 +95,11 @@ func (q *quoter) Year(symbol string, year int) ([]trade.Quote, error) {
 			m, err := q.Month(symbol, year, time.Month(i))
 			if err != nil && err.Error() != "twse: No Data!" {
 				ch <- err
+				return
 			}
 
+			mu.Lock()
+			defer mu.Unlock()
 			yr[i] = m
 		}(i)
 	}
