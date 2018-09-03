@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/Hunsin/compass/market"
 	"github.com/Hunsin/compass/trade"
 	hu "github.com/Hunsin/go-htmlutil"
 	"golang.org/x/net/html"
@@ -12,68 +13,90 @@ import (
 
 var isin = newAgent("http://isin.twse.com.tw/isin/e_class_main.jsp?owncode=%s&market=1")
 
-// parseISIN extracts the Security from urlISIN with given code
-func parseISIN(symbol string) (trade.Security, error) {
-	var s trade.Security
-	var e error
-	err := isin.do(func(r io.Reader) error {
-		n, err := html.Parse(r)
-		if err != nil {
-			return err
+// parseSecurity extracts the Security from given <tr> node.
+func parseSecurity(tr *html.Node) (trade.Security, error) {
+	var td []string
+
+	// push text contents of each <td> to slice
+	for c := tr.FirstChild; c != nil; c = c.NextSibling {
+		if c.Data == "td" {
+			td = append(td, hu.Text(c))
 		}
-
-		var c *html.Node
-		hu.Last(n, func(n *html.Node) (found bool) {
-			if found = n.Data == "td" && hu.Text(n) == symbol; found {
-				c = n
-			}
-			return
-		})
-
-		// return error if no <td> node with code found
-		if c == nil {
-			e = fmt.Errorf("twse: Code %s not found", symbol)
-			return nil
-		}
-
-		// push text contents of each <td> to slice
-		var str []string
-		for c = c.Parent.FirstChild; c != nil; c = c.NextSibling {
-			if c.Data == "td" {
-				str = append(str, hu.Text(c))
-			}
-		}
-
-		// prevent panic
-		if len(str) < 7 {
-			return fmt.Errorf("twse: can not parse data of code %s", symbol)
-		}
-
-		s = trade.Security{
-			Market: "twse",
-			Symbol: symbol,
-			Name:   strings.TrimSpace(str[3]),
-			Type:   strings.TrimSpace(str[5]),
-			Listed: formatDate(str[7]),
-		}
-		return nil
-	}, symbol)
-
-	if e != nil {
-		return s, e
 	}
-	return s, err
+
+	// prevent panic
+	if len(td) < 8 {
+		return trade.Security{}, fmt.Errorf("twse: Could not parse data at %v", *tr)
+	}
+
+	return trade.Security{
+		Market: "twse",
+		Isin:   strings.TrimSpace(td[1]),
+		Symbol: strings.TrimSpace(td[2]),
+		Name:   strings.TrimSpace(td[3]),
+		Type:   strings.TrimSpace(td[5]),
+		Listed: formatDate(td[7]),
+	}, nil
 }
 
 // An exchange implements the market.Agent interface.
 type exchange struct{}
 
 func (e *exchange) Security(symbol string) (trade.Security, error) {
-	return parseISIN(symbol)
+	var s trade.Security
+	return s, isin.do(func(r io.Reader) error {
+		n, err := html.Parse(r)
+		if err != nil {
+			return err
+		}
+
+		var tr *html.Node
+		hu.Last(n, func(n *html.Node) (found bool) {
+			if found = n.Data == "td" && hu.Text(n) == symbol; found {
+				tr = n.Parent
+			}
+			return
+		})
+
+		// return error if no <td> node with symbol was found
+		if tr == nil {
+			msg := fmt.Sprintf("twse: Symbol %s not found", symbol)
+			return market.Unlisted(msg)
+		}
+
+		s, err = parseSecurity(tr)
+		return err
+	}, symbol)
 }
 
 func (e *exchange) Listed() ([]trade.Security, error) {
-	return nil, nil
+	var ss []trade.Security
+	return ss, isin.do(func(r io.Reader) error {
+		n, err := html.Parse(r)
+		if err != nil {
+			return err
+		}
+
+		hu.Walk(n, func(n *html.Node) (found bool) {
+			if found = n.Data == "tr"; found {
+				var s trade.Security
+				s, er := parseSecurity(n)
+				if er != nil {
+					err = er // only the last error left; intended behavior
+					return
+				}
+				ss = append(ss, s)
+			}
+			return
+		})
+
+		// remove table header
+		if len(ss) > 0 && ss[0].Isin == "ISIN Code" {
+			ss = ss[1:]
+		}
+
+		return err
+	}, "")
 }
 
 func (e *exchange) Market() trade.Market {

@@ -23,8 +23,11 @@ type apiDay struct {
 	Stat   string     `json:"stat"`
 }
 
-func query(symbol string, year int, month time.Month) ([]trade.Quote, error) {
+// A quoter is an instance which implements market.Quoter interface.
+type quoter struct{}
 
+// Month returns a list of trade.Quote by given year and month.
+func (q *quoter) Month(symbol string, year int, month time.Month) ([]trade.Quote, error) {
 	// check values
 	if month < 1 || month > 12 {
 		return nil, market.Error(pb.Status_BAD_REQUEST, fmt.Sprintf("twse: Invalid month %d", month))
@@ -71,52 +74,45 @@ func query(symbol string, year int, month time.Month) ([]trade.Quote, error) {
 	return qs, nil
 }
 
-// A quoter is an instance which implements market.Quoter interface.
-type quoter struct{}
-
-// Month returns a list of trade.Quote by given year and month.
-func (q *quoter) Month(symbol string, year int, month time.Month) ([]trade.Quote, error) {
-	return query(symbol, year, month)
-}
-
 // Year returns a list of trade.Quote in given year.
 func (q *quoter) Year(symbol string, year int) ([]trade.Quote, error) {
-	start, end := 0, 12
-	t := time.Now()
-	if year == t.Year() {
-		end = int(t.Month())
+	start, end := 1, 12
+	now := time.Now()
+	if year == now.Year() {
+		end = int(now.Month())
 	}
-
-	ch := make(chan error)
-	defer close(ch)
 
 	wg := sync.WaitGroup{}
 	yr := make(map[int][]trade.Quote)
-	for i := start; i < end; i++ {
+	ch := make(chan error)
+	defer close(ch)
+
+	for i := start; i < end+1; i++ {
 		wg.Add(1)
-		go func(m int) {
+		go func(i int) {
 			defer wg.Done()
-			var err error
-			yr[m], err = q.Month(symbol, year, time.Month(m+1))
-			if err != nil {
+			m, err := q.Month(symbol, year, time.Month(i))
+			if err != nil && err.Error() != "twse: No Data!" {
 				ch <- err
 			}
+
+			yr[i] = m
 		}(i)
 	}
 
-	go func() {
-		wg.Wait()
-		ch <- nil
-	}()
-
-	if err := <-ch; err != nil {
+	wg.Wait()
+	select {
+	case err := <-ch:
 		return nil, err
+	default:
+		for i := start + 1; i < end+1; i++ {
+			yr[start] = append(yr[start], yr[i]...)
+		}
+		if len(yr[start]) == 0 {
+			return nil, market.Unlisted("twse: No data found")
+		}
+		return yr[start], nil
 	}
-
-	for i := start + 1; i < end; i++ {
-		yr[start] = append(yr[start], yr[i]...)
-	}
-	return yr[start], nil
 }
 
 func (q *quoter) Range(symbol string, start, end civil.Date) ([]trade.Quote, error) {
