@@ -21,12 +21,17 @@ func (m *Market) Search(symbol string) (*Security, error) {
 		return nil, err
 	}
 
-	l, err := civil.ParseDate(p.Listed)
-	if err != nil {
+	var l, d *civil.Date
+	if *l, err = civil.ParseDate(p.Listed); err != nil {
 		return nil, err
 	}
 
-	return &Security{p, l, m.q}, nil
+	if p.Delisted != "" {
+		if *d, err = civil.ParseDate(p.Delisted); err != nil {
+			return nil, err
+		}
+	}
+	return &Security{p, l, d, m.q}, nil
 }
 
 var (

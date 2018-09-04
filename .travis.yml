@@ -1,9 +1,8 @@
 language: go
   
 go:
-  - 1.8.x
-  - 1.9.x
   - 1.10.x
+  - 1.11.x
 
 sudo: required
 
@@ -13,6 +12,6 @@ before_script:
   - psql -c 'create database compass;' -U postgres
 
 script:
-  - go test -v github.com/Hunsin/compass/crawler -user postgres -db compass
+  - go test -v github.com/Hunsin/compass/market
   - go test -v github.com/Hunsin/compass/twse
   - go test -v github.com/Hunsin/compass/bucket -user postgres -db compass

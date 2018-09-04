@@ -12,9 +12,9 @@ import (
 
 // A Security represents a financial instrument in a market.
 type Security struct {
-	profile trade.Security
-	listed  civil.Date
-	quote   Quoter
+	profile          trade.Security
+	listed, delisted *civil.Date
+	quote            Quoter
 }
 
 // Profile returns the information of the Security.
@@ -27,21 +27,26 @@ func (s *Security) Quotes(ctx context.Context, start, end civil.Date) ([]trade.Q
 	if start.After(end) {
 		start, end = end, start
 	}
+
 	if s.listed.After(end) {
-		return nil, Unlisted("market: " + s.profile.Symbol + "listed on date" + s.profile.Listed)
+		return nil, Unlisted(s.profile.Symbol + "listed on date" + s.profile.Listed)
+	}
+	if s.listed.After(start) {
+		start = *s.listed
+	}
+	if s.delisted != nil && s.delisted.Before(end) {
+		end = *s.delisted
 	}
 
 	qs, err := s.quote.Range(s.profile.Symbol, start, end)
-	if err != nil {
-		if e, ok := err.(*Err); !ok || e.Status() != pb.Status_UNIMPLEMENTED {
-			return nil, err
-		}
+	if e, ok := err.(*Err); ok && e.Status() == pb.Status_UNIMPLEMENTED {
+		qs = []trade.Quote{} // make sure it's empty
+		q := []trade.Quote{}
 
-		var q []trade.Quote
 		for start.Before(end) {
 			select {
 			case <-ctx.Done():
-				return nil, Cancelled("market: query cancelled")
+				return nil, Cancelled("query cancelled")
 			default:
 				if start.Month == time.January && (end.Year > start.Year || end.Month == time.December) {
 					q, err = s.quote.Year(s.profile.Symbol, start.Year)
@@ -88,5 +93,5 @@ func (s *Security) Quotes(ctx context.Context, start, end civil.Date) ([]trade.Q
 		}
 		qs = qs[:i+1]
 	}
-	return qs, nil
+	return qs, err
 }
