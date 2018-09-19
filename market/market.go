@@ -31,7 +31,7 @@ func (m *Market) Search(symbol string) (*Security, error) {
 			return nil, err
 		}
 	}
-	return &Security{p, l, d, m.q}, nil
+	return &Security{*p, l, d, m.q}, nil
 }
 
 var (

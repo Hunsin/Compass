@@ -18,8 +18,8 @@ func TestSecurity(t *testing.T) {
 			t.Fatalf("exchange.Security(%s) failed: %v", symbol, err)
 		}
 
-		if !equal(s, pf[symbol]) {
-			t.Errorf("exchange.Security(%s) failed.\nGot:  %v\nWant: %v", symbol, s, pf[symbol])
+		if !equal(*s, pf[symbol]) {
+			t.Errorf("exchange.Security(%s) failed.\nGot:  %v\nWant: %v", symbol, *s, pf[symbol])
 		}
 	}
 
@@ -64,7 +64,7 @@ func TestListed(t *testing.T) {
 	// make sure data is correct
 	c := "2330"
 	for i := range s {
-		if s[i].Symbol == c && !equal(s[i], pf[c]) {
+		if s[i].Symbol == c && !equal(*s[i], pf[c]) {
 			t.Errorf("exchange.Listed failed: wrong profile data.\nGot: %v\nWant: %v", s[i], pf[c])
 		}
 	}

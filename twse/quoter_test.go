@@ -50,11 +50,11 @@ func TestMonth(t *testing.T) {
 	}
 
 	for i := range q {
-		if equal(q[i], trade.Quote{}) {
+		if equal(*q[i], trade.Quote{}) {
 			t.Error("quoter.Month failed: an empty quote was returned")
 		}
 	}
-	if !equal(q[7], tsmc20171016) {
+	if !equal(*q[7], tsmc20171016) {
 		t.Errorf("quoter.Month failed: worng data\nGot : %v\nWant: %v", q[7], tsmc20171016)
 	}
 }

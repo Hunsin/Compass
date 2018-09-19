@@ -27,7 +27,7 @@ type apiDay struct {
 type quoter struct{}
 
 // Month returns a list of trade.Quote by given year and month.
-func (q *quoter) Month(symbol string, year int, month time.Month) ([]trade.Quote, error) {
+func (q *quoter) Month(symbol string, year int, month time.Month) ([]*trade.Quote, error) {
 	// check values
 	if month < 1 || month > 12 {
 		return nil, market.Error(pb.Status_BAD_REQUEST, fmt.Sprintf("twse: Invalid month %d", month))
@@ -54,7 +54,7 @@ func (q *quoter) Month(symbol string, year int, month time.Month) ([]trade.Quote
 		return nil, fmt.Errorf("twse: %s", st.Stat)
 	}
 
-	var qs []trade.Quote
+	var qs []*trade.Quote
 	for i := range st.Data {
 		v, _ := strconv.ParseUint(formatNum(st.Data[i][1]), 10, 64) // volume
 		s, _ := strconv.Atoi(formatNum(st.Data[i][2]))              // value
@@ -62,7 +62,7 @@ func (q *quoter) Month(symbol string, year int, month time.Month) ([]trade.Quote
 		h, _ := strconv.ParseFloat(formatNum(st.Data[i][4]), 64)    // highest
 		l, _ := strconv.ParseFloat(formatNum(st.Data[i][5]), 64)    // lowest
 		c, _ := strconv.ParseFloat(formatNum(st.Data[i][6]), 64)    // close
-		qs = append(qs, trade.Quote{
+		qs = append(qs, &trade.Quote{
 			Date:   formatDate(st.Data[i][0]),
 			Open:   o,
 			High:   h,
@@ -75,7 +75,7 @@ func (q *quoter) Month(symbol string, year int, month time.Month) ([]trade.Quote
 }
 
 // Year returns a list of trade.Quote in given year.
-func (q *quoter) Year(symbol string, year int) ([]trade.Quote, error) {
+func (q *quoter) Year(symbol string, year int) ([]*trade.Quote, error) {
 	start, end := 1, 12
 	now := time.Now()
 	if year == now.Year() {
@@ -84,7 +84,7 @@ func (q *quoter) Year(symbol string, year int) ([]trade.Quote, error) {
 
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
-	yr := make(map[int][]trade.Quote)
+	yr := make(map[int][]*trade.Quote)
 	ch := make(chan error)
 	defer close(ch)
 
@@ -119,6 +119,6 @@ func (q *quoter) Year(symbol string, year int) ([]trade.Quote, error) {
 	}
 }
 
-func (q *quoter) Range(symbol string, start, end civil.Date) ([]trade.Quote, error) {
+func (q *quoter) Range(symbol string, start, end civil.Date) ([]*trade.Quote, error) {
 	return nil, market.Unimplemented("twse: range method not supported")
 }
