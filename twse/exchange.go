@@ -14,7 +14,7 @@ import (
 var isin = newAgent("http://isin.twse.com.tw/isin/e_class_main.jsp?owncode=%s&market=1")
 
 // parseSecurity extracts the Security from given <tr> node.
-func parseSecurity(tr *html.Node) (trade.Security, error) {
+func parseSecurity(tr *html.Node) (*trade.Security, error) {
 	var td []string
 
 	// push text contents of each <td> to slice
@@ -26,10 +26,10 @@ func parseSecurity(tr *html.Node) (trade.Security, error) {
 
 	// prevent panic
 	if len(td) < 8 {
-		return trade.Security{}, fmt.Errorf("twse: Could not parse data at %v", *tr)
+		return nil, fmt.Errorf("twse: Could not parse data at %v", *tr)
 	}
 
-	return trade.Security{
+	return &trade.Security{
 		Market: "twse",
 		Isin:   strings.TrimSpace(td[1]),
 		Symbol: strings.TrimSpace(td[2]),
@@ -42,8 +42,8 @@ func parseSecurity(tr *html.Node) (trade.Security, error) {
 // An exchange implements the market.Agent interface.
 type exchange struct{}
 
-func (e *exchange) Security(symbol string) (trade.Security, error) {
-	var s trade.Security
+func (e *exchange) Security(symbol string) (*trade.Security, error) {
+	var s *trade.Security
 	return s, isin.do(func(r io.Reader) error {
 		n, err := html.Parse(r)
 		if err != nil {
@@ -69,8 +69,8 @@ func (e *exchange) Security(symbol string) (trade.Security, error) {
 	}, symbol)
 }
 
-func (e *exchange) Listed() ([]trade.Security, error) {
-	var ss []trade.Security
+func (e *exchange) Listed() ([]*trade.Security, error) {
+	var ss []*trade.Security
 	return ss, isin.do(func(r io.Reader) error {
 		n, err := html.Parse(r)
 		if err != nil {
@@ -79,7 +79,6 @@ func (e *exchange) Listed() ([]trade.Security, error) {
 
 		hu.Walk(n, func(n *html.Node) (found bool) {
 			if found = n.Data == "tr"; found {
-				var s trade.Security
 				s, er := parseSecurity(n)
 				if er != nil {
 					err = er // only the last error left; intended behavior
@@ -99,8 +98,8 @@ func (e *exchange) Listed() ([]trade.Security, error) {
 	}, "")
 }
 
-func (e *exchange) Market() trade.Market {
-	return trade.Market{
+func (e *exchange) Profile() *trade.Market {
+	return &trade.Market{
 		Code:     "twse",
 		Name:     "Taiwan Stock Exchange",
 		Currency: "twd",

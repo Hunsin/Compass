@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Hunsin/compass/trade/pb"
-
 	"cloud.google.com/go/civil"
 	"github.com/Hunsin/compass/trade"
+	"github.com/Hunsin/compass/trade/pb"
 )
 
 // A Security represents a financial instrument in a market.
@@ -23,7 +22,7 @@ func (s *Security) Profile() trade.Security {
 }
 
 // Quotes returns a list of trading quotes from the start to the end date.
-func (s *Security) Quotes(ctx context.Context, start, end civil.Date) ([]trade.Quote, error) {
+func (s *Security) Quotes(ctx context.Context, start, end civil.Date) ([]*trade.Quote, error) {
 	if start.After(end) {
 		start, end = end, start
 	}
@@ -40,8 +39,8 @@ func (s *Security) Quotes(ctx context.Context, start, end civil.Date) ([]trade.Q
 
 	qs, err := s.quote.Range(s.profile.Symbol, start, end)
 	if e, ok := err.(*Err); ok && e.Status() == pb.Status_UNIMPLEMENTED {
-		qs = []trade.Quote{} // make sure it's empty
-		q := []trade.Quote{}
+		qs = []*trade.Quote{} // make sure it's empty
+		q := []*trade.Quote{}
 
 		for start.Before(end) {
 			select {
